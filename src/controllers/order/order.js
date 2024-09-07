@@ -20,9 +20,7 @@ export const createOrder = async (req, reply) => {
         }
 
         // Debug output to verify customerData and branchData
-        console.log("Customer Data:", customerData);
-        console.log("Branch Data:", branchData);
-
+    
         // Construct the new order
         const newOrder = new Order({
             customer: userId,
@@ -52,8 +50,6 @@ export const createOrder = async (req, reply) => {
         return reply.status(500).send({ message: "Failed to create order", error });
     }
 };
-
-
 export const confirmOrder = async(req,reply) => {
     try {
         const {orderId} = req.params;
@@ -74,10 +70,13 @@ export const confirmOrder = async(req,reply) => {
 
         order.deliveryPartner = userId;
         order.deliveryPersonLocation ={
-            laitude: deliveryPersonLocation.latitude,
+            latitude: deliveryPersonLocation.latitude,
             longitude: deliveryPersonLocation.longitude,
             address: deliveryPersonLocation.address || ""
-        }
+        };
+
+        req.server.io.to(orderId).emit("orderConfirmed", order);
+
         await order.save();
 
         return reply.send(order)
@@ -85,9 +84,9 @@ export const confirmOrder = async(req,reply) => {
         return reply.status(500).send({message:"Failed to confirm order",error})
     }
  };
-
 export const updateOrderStatus = async(req,reply) => {
    try {
+   
     const {orderId} = req.params
     const {status, deliveryPersonLocation} = req.body
     
@@ -111,16 +110,18 @@ export const updateOrderStatus = async(req,reply) => {
         order.deliveryPersonLocation = deliveryPersonLocation;
         
         await order.save();
+
+        req.server.io.to(orderId).emit("liveTrackingUpdates", order);
            
         return reply.send(order);
 
    } catch (error) {
+    
         return reply
         .status(500)
         .send({ message: "Failed to update order status", error });
    }
 }
-
 export const getOrders = async(req,reply) => {
     try {
         const { status, customerId,deliveryPartnerId,branchId} = req.query;
@@ -133,8 +134,8 @@ export const getOrders = async(req,reply) => {
             query.customer = customerId
         }
         if(deliveryPartnerId) {
-            query.deliveryPartner = status
-            query.branch= status
+            query.deliveryPartner = deliveryPartnerId
+            query.branch= branchId
         }
 
         const orders = await Order.find(query).populate(
@@ -149,7 +150,6 @@ export const getOrders = async(req,reply) => {
         .send({ message: "Failed to retrieve orders", error });
     }
 }
-
 export const getOrdersById = async (req,reply) => {
 
     try {
