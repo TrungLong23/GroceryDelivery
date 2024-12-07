@@ -27,15 +27,16 @@ const start = async () => {
     // Xây dựng router admin
     await buildAdminRouter(app);
 
-    // Khởi động máy chủ
-    app.listen({ port: PORT }, (err, addr) => {
-      if (err) {
-        console.error("Lỗi khi khởi động máy chủ:", err);
-        process.exit(1);
-      } else {
-        console.log(`GroceryStore đã khởi động tại http://localhost:${PORT}${admin.options.rootPath}`);
-      }
-    });
+// Khởi động máy chủ
+app.listen({ port: PORT, host: '0.0.0.0' }, (err, addr) => {
+  if (err) {
+    console.error("Lỗi khi khởi động máy chủ:", err);
+    process.exit(1);
+  } else {
+    console.log(`GroceryStore đã khởi động tại http://0.0.0.0:${PORT}${admin.options.rootPath}`);
+  }
+});
+
 
     // Chờ cho đến khi máy chủ được khởi tạo hoàn chỉnh
     await app.ready();

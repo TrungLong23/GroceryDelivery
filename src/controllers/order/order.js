@@ -150,25 +150,22 @@ export const getOrders = async(req,reply) => {
         .send({ message: "Failed to retrieve orders", error });
     }
 }
-export const getOrdersById = async (req,reply) => {
-
+export const getOrdersById = async (req, reply) => {
     try {
-        const { orderId} = req.params;
-        
-        const order = await Order.find(order).populate(
-            "customer branch items.item deliveryPartner"
-        );
-
-        if(!order) {
-            return reply.status(404).send({message: "Order not found"})
-        }
-
-        return reply.send(order);
-
-        
+      const { orderId } = req.params;
+  
+      // Sử dụng findById để tìm order theo ID
+      const order = await Order.findById(orderId).populate(
+        "customer branch items.item deliveryPartner"
+      );
+  
+      if (!order) {
+        return reply.status(404).send({ message: "Order not found" });
+      }
+  
+      return reply.send(order);
     } catch (error) {
-        return reply
-        .status(500)
-        .send({ message: "Failed to retrieve order", error });
+      console.error("Error fetching order:", error);
+      return reply.status(500).send({ message: "Failed to retrieve order", error });
     }
-}
+  };

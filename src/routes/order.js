@@ -16,5 +16,5 @@ export const orderRoutes = async (fasitfy,options)=> {
         fasitfy.get('/order',getOrders)
         fasitfy.patch('/order/:orderId/status',updateOrderStatus)
         fasitfy.post('/order/:orderId/confirm',confirmOrder)
-        fasitfy.post('/order/:orderId',getOrdersById)
+        fasitfy.get('/order/:orderId', getOrdersById);
 }
