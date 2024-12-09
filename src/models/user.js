@@ -36,6 +36,7 @@ const deliveryPartnerSchema = new mongoose.Schema({
     branch: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Branch",
+        default: null,
     },
 });
 

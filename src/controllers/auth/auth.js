@@ -1,5 +1,6 @@
 import { Customer, DeliveryPartner } from "../../models/user.js";
 import jwt from 'jsonwebtoken';
+import bcrypt from "bcrypt"; // Import bcrypt để so sánh mật khẩu
 
 const generateTokens = (user) => {
     const accessToken = jwt.sign(
@@ -18,18 +19,20 @@ const generateTokens = (user) => {
 export const loginCustomer = async (req, reply) => {
     try {
         const { phone } = req.body;
-        let customer = await Customer.findOne({ phone });
+
+        // Kiểm tra xem khách hàng đã tồn tại chưa
+        const customer = await Customer.findOne({ phone });
         if (!customer) {
-            customer = new Customer({
-                phone,
-                role: "Customer",
-                isActivated: true,
-            });
-            await customer.save();
+            return reply
+                .status(404)
+                .send({ message: "Phone number not registered" });
         }
+
+        // Tạo token cho khách hàng đã tồn tại
         const { accessToken, refreshToken } = generateTokens(customer);
+
         return reply.send({
-            message: customer ? "Login Successful" : "Customer created and logged in",
+            message: "Login Successful",
             accessToken,
             refreshToken,
             customer,
@@ -39,24 +42,31 @@ export const loginCustomer = async (req, reply) => {
     }
 };
 
+
+
 export const loginDeliveryPartner = async (req, reply) => {
     try {
         const { email, password } = req.body;
-        let deliveryPartner = await DeliveryPartner.findOne({ email });
+
+        // Kiểm tra xem đối tác đã tồn tại chưa
+        const deliveryPartner = await DeliveryPartner.findOne({ email });
         if (!deliveryPartner) {
             return reply
                 .status(404)
-                .send({ message: "Delivery Partner not found" });
+                .send({ message: "Email not registered" });
         }
-        // So sánh mật khẩu đã mã hóa (cần phải mã hóa mật khẩu)
-        const isMatch = password === deliveryPartner.password;
 
+        // So sánh mật khẩu đã mã hóa
+        const isMatch = await bcrypt.compare(password, deliveryPartner.password);
         if (!isMatch) {
             return reply
                 .status(400)
-                .send({ message: "Invalid Credentials" });
+                .send({ message: "Invalid credentials" });
         }
+
+        // Tạo token cho đối tác đã tồn tại
         const { accessToken, refreshToken } = generateTokens(deliveryPartner);
+
         return reply.send({
             message: "Login Successful",
             accessToken,
@@ -119,6 +129,81 @@ export const fetchUser = async (req, reply) => {
             user,
         });
 
+    } catch (error) {
+        return reply.status(500).send({ message: "An error occurred", error });
+    }
+};
+
+export const registerCustomer = async (req, reply) => {
+    try {
+        const { phone, name, address } = req.body;
+
+        // Kiểm tra xem số điện thoại đã tồn tại chưa
+        let existingCustomer = await Customer.findOne({ phone });
+        if (existingCustomer) {
+            return reply
+                .status(400)
+                .send({ message: "Phone number already registered" });
+        }
+
+        // Tạo khách hàng mới
+        const customer = new Customer({
+            phone,
+            name,
+            address,
+            role: "Customer",
+            isActivated: true,
+        });
+        await customer.save();
+
+        const { accessToken, refreshToken } = generateTokens(customer);
+
+        return reply.send({
+            message: "Customer registered successfully",
+            accessToken,
+            refreshToken,
+            customer,
+        });
+    } catch (error) {
+        return reply.status(500).send({ message: "An error occurred", error });
+    }
+};
+
+// Đăng ký đối tác giao hàng
+export const registerDeliveryPartner = async (req, reply) => {
+    try {
+        const { email, password, phone, name, branch } = req.body;
+
+        // Kiểm tra email đã tồn tại chưa
+        let existingPartner = await DeliveryPartner.findOne({ email });
+        if (existingPartner) {
+            return reply
+                .status(400)
+                .send({ message: "Email already registered" });
+        }
+
+        // Mã hóa mật khẩu
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Tạo đối tác mới
+        const deliveryPartner = new DeliveryPartner({
+            email,
+            password: hashedPassword,
+            phone,
+            name,
+            branch,
+            role: "DeliveryPartner",
+        });
+        await deliveryPartner.save();
+
+        const { accessToken, refreshToken } = generateTokens(deliveryPartner);
+
+        return reply.send({
+            message: "Delivery Partner registered successfully",
+            accessToken,
+            refreshToken,
+            deliveryPartner,
+        });
     } catch (error) {
         return reply.status(500).send({ message: "An error occurred", error });
     }
