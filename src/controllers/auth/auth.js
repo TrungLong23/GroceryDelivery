@@ -18,14 +18,18 @@ const generateTokens = (user) => {
 
 export const loginCustomer = async (req, reply) => {
     try {
-        const { phone } = req.body;
+        const { phone, password } = req.body;
 
         // Kiểm tra xem khách hàng đã tồn tại chưa
-        const customer = await Customer.findOne({ phone });
+        const customer = await Customer.findOne({ phone }).select("+password");
         if (!customer) {
-            return reply
-                .status(404)
-                .send({ message: "Phone number not registered" });
+            return reply.status(404).send({ message: "Phone number not registered" });
+        }
+
+        // Kiểm tra mật khẩu
+        const isMatch = await customer.comparePassword(password);
+        if (!isMatch) {
+            return reply.status(400).send({ message: "Invalid credentials" });
         }
 
         // Tạo token cho khách hàng đã tồn tại
@@ -42,8 +46,6 @@ export const loginCustomer = async (req, reply) => {
     }
 };
 
-
-
 export const loginDeliveryPartner = async (req, reply) => {
     try {
         const { email, password } = req.body;
@@ -51,17 +53,13 @@ export const loginDeliveryPartner = async (req, reply) => {
         // Kiểm tra xem đối tác đã tồn tại chưa
         const deliveryPartner = await DeliveryPartner.findOne({ email });
         if (!deliveryPartner) {
-            return reply
-                .status(404)
-                .send({ message: "Email not registered" });
+            return reply.status(404).send({ message: "Email not registered" });
         }
 
         // So sánh mật khẩu đã mã hóa
         const isMatch = await bcrypt.compare(password, deliveryPartner.password);
         if (!isMatch) {
-            return reply
-                .status(400)
-                .send({ message: "Invalid credentials" });
+            return reply.status(400).send({ message: "Invalid credentials" });
         }
 
         // Tạo token cho đối tác đã tồn tại
@@ -77,6 +75,7 @@ export const loginDeliveryPartner = async (req, reply) => {
         return reply.status(500).send({ message: "An error occurred", error });
     }
 };
+
 
 export const refreshToken = async (req, reply) => {
     const { refreshToken } = req.body;
@@ -136,7 +135,7 @@ export const fetchUser = async (req, reply) => {
 
 export const registerCustomer = async (req, reply) => {
     try {
-        const { phone, name, address } = req.body;
+        const { phone, name, address, password } = req.body;
 
         // Kiểm tra xem số điện thoại đã tồn tại chưa
         let existingCustomer = await Customer.findOne({ phone });
@@ -151,6 +150,7 @@ export const registerCustomer = async (req, reply) => {
             phone,
             name,
             address,
+            password, // Truyền password vào schema (middleware sẽ tự mã hóa)
             role: "Customer",
             isActivated: true,
         });
@@ -168,6 +168,7 @@ export const registerCustomer = async (req, reply) => {
         return reply.status(500).send({ message: "An error occurred", error });
     }
 };
+
 
 // Đăng ký đối tác giao hàng
 export const registerDeliveryPartner = async (req, reply) => {
