@@ -49,22 +49,28 @@ export const admin = new AdminJS({
 });
 
 export const buildAdminRouter = async (app) => {
+    console.log(`[BUILD ROUTER] Setting up AdminJS router...`);
+
     await AdminJSFastify.buildAuthenticatedRouter(
         admin,
         {
             authenticate,
-            cookiePassword: COOKIE_PASSWORD, // Sửa lỗi chính tả ở đây
+            cookiePassword: COOKIE_PASSWORD,
             cookieName: "adminjs",
         },
         app,
         {
             store: sessionStore,
-            saveUninitialized: true, // Sửa lỗi chính tả ở đây (saveUnintialized -> saveUninitialized)
-            secret: COOKIE_PASSWORD, // Dùng secret hoặc cookiePassword nhưng không cả hai
+            saveUninitialized: false,
+            secret: COOKIE_PASSWORD,
             cookie: {
-                httpOnly: process.env.NODE_ENV === "production",
-                secure: process.env.NODE_ENV === "production",
-            }
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production", // Log thêm thông tin này
+                maxAge: 24 * 60 * 60 * 1000,
+            },
         }
     );
+
+    console.log(`[BUILD ROUTER] AdminJS router setup complete.`);
 };
+
