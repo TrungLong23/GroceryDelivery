@@ -209,3 +209,35 @@ export const registerDeliveryPartner = async (req, reply) => {
         return reply.status(500).send({ message: "An error occurred", error });
     }
 };
+export const updateCustomer = async (req, reply) => {
+    try {
+        const { userId } = req.user; // Lấy userId từ thông tin xác thực
+        const updateData = req.body; // Dữ liệu cần cập nhật từ client
+
+        // Tìm khách hàng theo userId
+        const customer = await Customer.findById(userId);
+
+        if (!customer) {
+            return reply.status(404).send({ message: "Customer not found" });
+        }
+
+        // Xử lý cập nhật thông tin
+        const updatedCustomer = await Customer.findByIdAndUpdate(
+            userId,
+            { $set: updateData },
+            { new: true, runValidators: true } // Trả về bản ghi sau khi cập nhật và kiểm tra validation
+        );
+
+        if (!updatedCustomer) {
+            return reply.status(404).send({ message: "Failed to update customer" });
+        }
+
+        return reply.send({
+            message: "Customer updated successfully",
+            updatedCustomer,
+        });
+    } catch (error) {
+        console.error("Error updating customer:", error);
+        return reply.status(500).send({ message: "Internal server error", error });
+    }
+};

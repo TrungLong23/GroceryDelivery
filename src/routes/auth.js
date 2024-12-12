@@ -1,6 +1,6 @@
 // src/routes/auth.js
 import { createAdmin } from "../controllers/auth/admin.js";
-import { fetchUser, loginCustomer, loginDeliveryPartner, refreshToken, registerCustomer, registerDeliveryPartner} from "../controllers/auth/auth.js";
+import { fetchUser, loginCustomer, loginDeliveryPartner, refreshToken, registerCustomer, registerDeliveryPartner, updateCustomer} from "../controllers/auth/auth.js";
 import {updateUser }  from "../controllers/tracking/user.js";
 import { verifyToken } from "../middleware/auth.js";
 
@@ -13,5 +13,6 @@ export const authRoutes = async (fastify, options) => {
     fastify.get("/user", { preHandler: [verifyToken] }, fetchUser); 
     fastify.patch("/user", { preHandler: [verifyToken] }, updateUser); 
     fastify.post("/admin/register", createAdmin);
+    fastify.patch("/customer/update", { preHandler: [verifyToken] }, updateCustomer);
 
 };
