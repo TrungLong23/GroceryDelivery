@@ -19,8 +19,8 @@ const customerSchema = new mongoose.Schema({
     password: { type: String, required: true, select: false }, // Thêm trường password
     role: { type: String, enum: ["Customer"], default: "Customer" },
     liveLocation: {
-        latitude: { type: Number },
-        longitude: { type: Number },
+        latitude: { type: Number , required: false},
+        longitude: { type: Number, required: false},
     },
     address: { type: String },
 });
