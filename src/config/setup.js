@@ -43,7 +43,7 @@ export const admin = new AdminJS({
         logo: "https://res.cloudinary.com/dje9nwbxk/image/upload/v1724237629/samples/logo.png"
 
     },
-    defaultTheme: dark.id,
+    defaultTheme: light.id,
     availableThemes: [dark,light,noSidebar],
     rootPath: "/admin",
 });
