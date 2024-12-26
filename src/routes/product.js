@@ -1,3 +1,6 @@
+
+
+import { createPayment, executePayment } from "../controllers/payment/paymenPaypal.js";
 import { getAllCategories } from "../controllers/product/category.js";
 import { addProductReview, getProductReviews, getProductsByCategoryId, searchProducts } from "../controllers/product/product.js";
 
@@ -9,4 +12,6 @@ export const productRoutes = async(fastify,options) => {
     fastify.get("/products/search/:searchTerm", searchProducts);
     fastify.post("/product/:productId/review", addProductReview);
     fastify.get("/product/:productId/reviews", getProductReviews);
+    fastify.post("/create-payment", createPayment);
+    fastify.post("/execute-payment", executePayment);
 };

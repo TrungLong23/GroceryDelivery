@@ -78,10 +78,6 @@ export const addProductReview = async (req, reply) => {
     }
 };
 
-
-
-
-
 export const getProductReviews = async (req, reply) => {
     const { productId } = req.params;
 
